@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "472029739757",
+    "project_id": "medi-kit-d0b9d",
+    "storage_bucket": "medi-kit-d0b9d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:472029739757:android:118e2443ffa26625b42ae4",
+        "android_client_info": {
+          "package_name": "com.example.medi_kit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "472029739757-3is0ssuri1va0rqu9vi3p663kij4dcaf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWmE39ROXziAJg08fXJ8KurZlfIPk3PEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "472029739757-3is0ssuri1va0rqu9vi3p663kij4dcaf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "472029739757-0ebu8ovjopt543apmcerfhcovd82d6fp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medi"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:472029739757:android:9091d9289e56211fb42ae4",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "472029739757-3is0ssuri1va0rqu9vi3p663kij4dcaf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWmE39ROXziAJg08fXJ8KurZlfIPk3PEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "472029739757-3is0ssuri1va0rqu9vi3p663kij4dcaf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "472029739757-0ebu8ovjopt543apmcerfhcovd82d6fp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
