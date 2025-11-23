@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+
 import '../../../domain/entities/medicine_entity.dart';
 import '../../../domain/usecases/medicine/add_medicine_usecase.dart';
 import '../../../domain/usecases/medicine/get_medicines_usecase.dart';
@@ -39,9 +40,7 @@ class MedicineBloc extends Bloc<MedicineEvent, MedicineState> {
       Emitter<MedicineState> emit,
       ) async {
     emit(MedicineLoading());
-
     final result = await getMedicinesUseCase(event.userId);
-
     result.fold(
           (failure) => emit(MedicineError(message: failure.message)),
           (medicines) => emit(MedicinesLoaded(medicines: medicines)),
@@ -53,7 +52,6 @@ class MedicineBloc extends Bloc<MedicineEvent, MedicineState> {
       Emitter<MedicineState> emit,
       ) async {
     emit(MedicineLoading());
-
     final result = await addMedicineUseCase(event.medicine);
 
     await result.fold(
@@ -61,8 +59,9 @@ class MedicineBloc extends Bloc<MedicineEvent, MedicineState> {
         emit(MedicineError(message: failure.message));
       },
           (success) async {
-        // Schedule notifications for this medicine
+        // Schedule notifications for all time slots
         await _scheduleMedicineNotifications(event.medicine);
+
         emit(MedicineActionSuccess(message: 'Medicine added successfully'));
         add(LoadMedicinesEvent(userId: event.medicine.userId));
       },
@@ -103,9 +102,10 @@ class MedicineBloc extends Bloc<MedicineEvent, MedicineState> {
 
     result.fold(
           (failure) => emit(MedicineError(message: failure.message)),
-          (_) {
-        // Cancel notifications for this medicine
-        notificationService.cancelNotification(event.medicineId.hashCode);
+          (_) async {
+        // Cancel ALL notifications for this medicine (all time slots)
+        await _cancelMedicineNotifications(event.medicineId);
+
         emit(MedicineActionSuccess(message: 'Medicine deleted'));
         if (state is MedicinesLoaded) {
           final currentState = state as MedicinesLoaded;
@@ -122,37 +122,60 @@ class MedicineBloc extends Bloc<MedicineEvent, MedicineState> {
       Emitter<MedicineState> emit,
       ) async {
     final today = DateTime.now().toIso8601String().split('T')[0];
-
     add(UpdateMedicineStatusEvent(
       medicineId: event.medicineId,
       date: today,
       status: MedicineStatus.taken,
     ));
 
-    // Speak confirmation if voice is enabled
     if (event.voiceEnabled) {
       await ttsService.speak('Medicine marked as taken. Great job!');
     }
   }
 
+  // ===========================================================================
+  // SCHEDULE NOTIFICATIONS (Correct signature - no repeatDaily param)
+  // ===========================================================================
   Future<void> _scheduleMedicineNotifications(MedicineEntity medicine) async {
-    for (final time in medicine.timesOfDay) {
-      final timeParts = time.split(':');
-      final hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
-
-      final scheduledTime = DateTime.now().copyWith(
-        hour: hour,
-        minute: minute,
-        second: 0,
-      );
-
+    try {
       await notificationService.scheduleMedicineReminder(
-        id: '${medicine.id}_$time'.hashCode,
+        medicineId: medicine.id,
         medicineName: medicine.name,
         dosage: medicine.dosage,
-        scheduledTime: scheduledTime,
+        timesOfDay: medicine.timesOfDay,
+        startDate: medicine.startDate,
+        // repeatDaily removed — daily repeat is automatic via matchDateTimeComponents
       );
+      print('Notifications scheduled for medicine: ${medicine.name}');
+    } catch (e) {
+      print('Failed to schedule notifications: $e');
+    }
+  }
+
+  // ===========================================================================
+  // CANCEL ALL NOTIFICATIONS FOR A MEDICINE (All time slots)
+  // ===========================================================================
+  Future<void> _cancelMedicineNotifications(String medicineId) async {
+    try {
+      final pending = await notificationService.getPendingNotifications();
+      final idsToCancel = pending
+          .where((n) => n.payload?.contains(medicineId) == true)
+          .map((n) => n.id)
+          .toList();
+
+      for (int id in idsToCancel) {
+        await notificationService.cancelNotification(id);
+      }
+
+      // Also cancel any old-style ones using hashCode (fallback)
+      await notificationService.cancelNotification(medicineId.hashCode);
+      await notificationService.cancelNotification((medicineId + '08:00').hashCode);
+      await notificationService.cancelNotification((medicineId + '20:00').hashCode);
+      // Add more if you have fixed times
+
+      print('Cancelled ${idsToCancel.length} notifications for medicine: $medicineId');
+    } catch (e) {
+      print('Error cancelling notifications: $e');
     }
   }
 }

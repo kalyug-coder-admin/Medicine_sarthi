@@ -1,5 +1,7 @@
+// lib/config/routes/app_router.dart
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+
 import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/register_screen.dart';
@@ -10,62 +12,109 @@ import '../../presentation/screens/appointment/appointment_list_screen.dart';
 import '../../presentation/screens/appointment/add_appointment_screen.dart';
 import '../../presentation/screens/voice/voice_assistant_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
+
 import 'route_names.dart';
 
 class AppRouter {
   static final router = GoRouter(
     initialLocation: RouteNames.splash,
+
+    // NEW: modern GoRouter error handler
+    errorBuilder: (context, state) => const Scaffold(
+      body: Center(
+        child: Text(
+          'Page not found.',
+          style: TextStyle(fontSize: 18),
+        ),
+      ),
+    ),
+
     routes: [
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.splash,
         name: 'splash',
-        builder: (context, state) => const SplashScreen(),
+        child: const SplashScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        child: const LoginScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.register,
         name: 'register',
-        builder: (context, state) => const RegisterScreen(),
+        child: const RegisterScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.home,
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        child: const HomeScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.medicines,
         name: 'medicines',
-        builder: (context, state) => const MedicineListScreen(),
+        child: const MedicineListScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.addMedicine,
         name: 'addMedicine',
-        builder: (context, state) => const AddMedicineScreen(),
+        child: const AddMedicineScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.appointments,
         name: 'appointments',
-        builder: (context, state) => const AppointmentListScreen(),
+        child: const AppointmentListScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.addAppointment,
         name: 'addAppointment',
-        builder: (context, state) => const AddAppointmentScreen(),
+        child: const AddAppointmentScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.voiceAssistant,
         name: 'voiceAssistant',
-        builder: (context, state) => const VoiceAssistantScreen(),
+        child: const VoiceAssistantScreen(),
       ),
-      GoRoute(
+      _animatedRoute(
         path: RouteNames.profile,
         name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
+        child: const ProfileScreen(),
       ),
     ],
   );
+
+  // ------------------------------
+  // Smooth Slide + Fade Transition
+  // ------------------------------
+  static GoRoute _animatedRoute({
+    required String path,
+    required String name,
+    required Widget child,
+  }) {
+    return GoRoute(
+      path: path,
+      name: name,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: child,
+          transitionDuration: const Duration(milliseconds: 320),
+          transitionsBuilder: (context, animation, secondaryAnimation, widgetChild) {
+            final slideTween = Tween<Offset>(
+              begin: const Offset(0.12, 0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: animation.drive(slideTween),
+                child: widgetChild,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }

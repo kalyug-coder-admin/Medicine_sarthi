@@ -95,7 +95,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
         .orderBy('appointmentDate', descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => AppointmentModel.fromJson(doc.data()))
-            .toList());
+        .map((doc) => AppointmentModel.fromJson(doc.data()))
+        .toList());
   }
 }

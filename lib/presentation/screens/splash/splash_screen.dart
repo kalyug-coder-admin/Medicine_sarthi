@@ -43,28 +43,43 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Main Icon
               const Icon(
                 Icons.medication,
-                size: 120,
+                size: 130,
                 color: Colors.white,
               ),
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 28),
+
+              // App Name
               Text(
-                'Health Companion',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                'Radha Krishna Care',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                 ),
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 10),
+
+              // Subtitle
               Text(
                 'Your Medicine Reminder',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.white70,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
-              const SizedBox(height: 48),
+
+              const SizedBox(height: 50),
+
+              // Progress Indicator
               const CircularProgressIndicator(
+                strokeWidth: 3,
                 color: Colors.white,
               ),
             ],

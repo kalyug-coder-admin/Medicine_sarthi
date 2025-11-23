@@ -1,11 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/routes/route_names.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../bloc/auth/auth_bloc.dart';
-import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -17,6 +16,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,6 +26,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _selectedGender = 'Male';
   UserRole _selectedRole = UserRole.elderly;
+
+  final Color bg = const Color(0xFFFFFDFC);
+  final Color accentBlue = const Color(0xFF2B65A8);
+  final Color accentPink = const Color(0xFFE85A8A);
+  final Color textGrey = const Color(0xFF8A8F9E);
+
+  // Uploaded Krishna outline image path
+  final String _topImagePath =
+      '/mnt/data/ccabbe73-e011-49d8-9418-1d01b11d08e7.png';
 
   @override
   void dispose() {
@@ -43,9 +52,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context.read<AuthBloc>().add(
         SignUpWithEmailEvent(
           email: _emailController.text.trim(),
-          password: _passwordController.text,
+          password: _passwordController.text.trim(),
           name: _nameController.text.trim(),
-          age: int.parse(_ageController.text),
+          age: int.parse(_ageController.text.trim()),
           gender: _selectedGender,
           role: _selectedRole,
           linkedElderlyId: _selectedRole == UserRole.family &&
@@ -57,27 +66,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  BoxDecoration softBox() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [
+        BoxShadow(
+            color: Colors.pink.shade50,
+            offset: const Offset(-3, -3),
+            blurRadius: 6),
+        BoxShadow(
+            color: Colors.blue.shade50,
+            offset: const Offset(3, 3),
+            blurRadius: 6),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back, color: accentBlue, size: 26),
+          onPressed: () => context.go(RouteNames.login),
         ),
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            context.go(RouteNames.home);
-          } else if (state is AuthError) {
+          if (state is AuthAuthenticated) context.go(RouteNames.home);
+          if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppColors.error,
+                backgroundColor: Colors.red,
               ),
             );
           }
@@ -87,232 +112,242 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           return SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Create Account',
-                      style: Theme.of(context).textTheme.displayMedium,
-                      textAlign: TextAlign.center,
+                    // ---------------- TITLE + IMAGE INLINE ----------------
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+
+                      children: [
+                        Flexible(
+                          child: Text(
+                            "Radha Krishna CARE",
+                            style: TextStyle(
+                              fontSize: 26,          // reduced from 30
+                              fontWeight: FontWeight.w700,
+                              color: accentBlue,
+                            ),
+                            overflow: TextOverflow.visible,
+                            softWrap: false,
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        SizedBox(
+                          height: 24,               // was 30
+                          width: 24,
+                          child: _buildTopImage(),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(height: 10),
+
+                    // ---------------- SUBTITLE ----------------
                     Text(
-                      'Sign up to get started',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
+                      "Create your divine connection",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: accentPink,
+                        fontWeight: FontWeight.w500,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 32),
-                    CustomTextField(
-                      controller: _nameController,
-                      label: 'Full Name',
-                      hint: 'Enter your full name',
-                      prefixIcon: Icons.person_outline,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'Enter your email',
-                      prefixIcon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter your email';
-                        }
-                        if (!value!.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hint: 'Enter your password',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter your password';
-                        }
-                        if (value!.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _confirmPasswordController,
-                      label: 'Confirm Password',
-                      hint: 'Re-enter your password',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please confirm your password';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 30),
+
+                    // ---------------- INPUT FIELDS ----------------
+                    _buildField("Your Name", _nameController,
+                        Icons.person_outline),
+                    const SizedBox(height: 18),
+
+                    _buildField(
+                        "Email", _emailController, Icons.email_outlined),
+                    const SizedBox(height: 18),
+
+                    _buildPasswordField("Password", _passwordController),
+                    const SizedBox(height: 18),
+
+                    _buildPasswordField(
+                        "Confirm Password", _confirmPasswordController),
+                    const SizedBox(height: 20),
+
+                    // ---------------- AGE + GENDER ----------------
                     Row(
                       children: [
                         Expanded(
-                          child: CustomTextField(
-                            controller: _ageController,
-                            label: 'Age',
-                            hint: 'Age',
-                            prefixIcon: Icons.calendar_today,
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value?.isEmpty ?? true) {
-                                return 'Required';
-                              }
-                              final age = int.tryParse(value!);
-                              if (age == null || age < 1 || age > 120) {
-                                return 'Invalid age';
-                              }
-                              return null;
-                            },
-                          ),
+                          child: _buildField("Age", _ageController,
+                              Icons.calendar_today,
+                              isNumber: true),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Gender',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              const Text("Gender",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                value: _selectedGender,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide.none,
+                              Container(
+                                decoration: softBox(),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                child: Theme(
+                                  data: Theme.of(context).copyWith(
+                                    canvasColor: Colors.white,       // popup menu
+                                    focusColor: Colors.transparent,  // no focus color
+                                    hoverColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    splashColor: Colors.transparent,
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 16,
+                                  child: DropdownButtonFormField(
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      isCollapsed: true,
+                                      fillColor: Colors.white,     // removes gray background
+                                      filled: true,
+                                    ),
+
+                                    dropdownColor: Colors.white,
+                                    isDense: true,
+                                    borderRadius: BorderRadius.circular(18),
+
+                                    style: const TextStyle(
+                                      color: Colors.black,     // text color
+                                      fontSize: 15,
+                                    ),
+
+                                    value: _selectedGender,
+                                    items: ["Male", "Female", "Other"]
+                                        .map((g) => DropdownMenuItem(
+                                      value: g,
+                                      child: Text(g),
+                                    ))
+                                        .toList(),
+
+                                    onChanged: (v) {
+                                      setState(() => _selectedGender = v!);
+                                    },
                                   ),
                                 ),
-                                items: ['Male', 'Female', 'Other']
-                                    .map((gender) => DropdownMenuItem(
-                                  value: gender,
-                                  child: Text(gender),
-                                ))
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedGender = value!;
-                                  });
-                                },
-                              ),
+                              )
+
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 26),
+
+                    // ---------------- ACCOUNT TYPE ----------------
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryLight.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                        ),
-                      ),
+                      decoration: softBox(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Account Type',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
+                          Text("Account Type",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black87)),
+                          const SizedBox(height: 8),
+
                           RadioListTile<UserRole>(
-                            title: const Text('Elderly User'),
-                            subtitle: const Text('Primary account holder'),
                             value: UserRole.elderly,
                             groupValue: _selectedRole,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value!;
-                              });
-                            },
+                            activeColor: accentBlue,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text("Elderly User"),
+                            subtitle: Text("Primary account holder",
+                                style: TextStyle(color: textGrey)),
+                            onChanged: (value) =>
+                                setState(() => _selectedRole = value!),
                           ),
+
                           RadioListTile<UserRole>(
-                            title: const Text('Family Member'),
-                            subtitle:
-                            const Text('Monitor elderly family member'),
                             value: UserRole.family,
                             groupValue: _selectedRole,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value!;
-                              });
-                            },
+                            activeColor: accentBlue,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text("Family Member"),
+                            subtitle: Text("Monitor elderly family member",
+                                style: TextStyle(color: textGrey)),
+                            onChanged: (value) =>
+                                setState(() => _selectedRole = value!),
                           ),
                         ],
                       ),
                     ),
+
                     if (_selectedRole == UserRole.family) ...[
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        controller: _linkCodeController,
-                        label: 'Family Link Code (Optional)',
-                        hint: 'Enter code from elderly user',
-                        prefixIcon: Icons.link,
-                      ),
+                      const SizedBox(height: 18),
+                      _buildField("Family Link Code", _linkCodeController,
+                          Icons.link),
                     ],
-                    const SizedBox(height: 32),
-                    CustomButton(
-                      text: 'Create Account',
-                      onPressed: isLoading ? null : _handleRegister,
-                      isLoading: isLoading,
+
+                    const SizedBox(height: 30),
+
+                    // ---------------- BOTTOM FLUTE IMAGE ----------------
+                    Center(
+                      child: Image.asset(
+                        "assets/icons/img.png",
+                        height: 110,
+                      ),
                     ),
-                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 20),
+
+                    // ---------------- CREATE ACCOUNT BUTTON ----------------
+                    GestureDetector(
+                      onTap: isLoading ? null : _handleRegister,
+                      child: AnimatedContainer(
+                        duration:
+                        const Duration(milliseconds: 200),
+                        height: 56,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: LinearGradient(
+                              colors: [accentBlue, accentPink]),
+                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                            color: Colors.white)
+                            : const Text(
+                          "Create Account",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    // ---------------- SIGN-IN LINK ----------------
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Already have an account? ',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
+                        Text("Already have an account? ",
+                            style: TextStyle(color: textGrey)),
                         TextButton(
-                          onPressed: () => context.pop(),
-                          child: const Text('Sign In'),
+                          onPressed: () =>
+                              context.go(RouteNames.login),
+                          child: Text("Sign In",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: accentBlue)),
                         ),
                       ],
                     ),
@@ -322,6 +357,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // ---------------- HELPERS ----------------
+
+  Widget _buildTopImage() {
+    try {
+      final file = File(_topImagePath);
+      if (file.existsSync()) {
+        return Image.file(file, fit: BoxFit.contain);
+      }
+    } catch (_) {}
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildField(String label, TextEditingController controller,
+      IconData icon,
+      {bool isNumber = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: softBox(),
+      child: CustomTextField(
+        controller: controller,
+        label: label,
+        hint: label,
+        prefixIcon: icon,
+        keyboardType:
+        isNumber ? TextInputType.number : TextInputType.text,
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(
+      String label, TextEditingController controller) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: softBox(),
+      child: CustomTextField(
+        controller: controller,
+        label: label,
+        hint: label,
+        prefixIcon: Icons.lock_outline,
+        obscureText: true,
       ),
     );
   }

@@ -13,8 +13,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   @override
   Future<Either<Failure, void>> addAppointment(
-    AppointmentEntity appointment,
-  ) async {
+      AppointmentEntity appointment,
+      ) async {
     try {
       final model = AppointmentModel.fromEntity(appointment);
       await remoteDataSource.addAppointment(model);
@@ -28,8 +28,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   @override
   Future<Either<Failure, List<AppointmentEntity>>> getAppointments(
-    String userId,
-  ) async {
+      String userId,
+      ) async {
     try {
       final appointments = await remoteDataSource.getAppointments(userId);
       return Right(appointments);
@@ -42,8 +42,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   @override
   Future<Either<Failure, AppointmentEntity>> getAppointmentById(
-    String appointmentId,
-  ) async {
+      String appointmentId,
+      ) async {
     try {
       final appointment = await remoteDataSource.getAppointmentById(appointmentId);
       return Right(appointment);
@@ -56,8 +56,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   @override
   Future<Either<Failure, void>> updateAppointment(
-    AppointmentEntity appointment,
-  ) async {
+      AppointmentEntity appointment,
+      ) async {
     try {
       final model = AppointmentModel.fromEntity(appointment);
       await remoteDataSource.updateAppointment(model);
@@ -88,16 +88,16 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
   @override
   Future<Either<Failure, List<AppointmentEntity>>> getUpcomingAppointments(
-    String userId,
-  ) async {
+      String userId,
+      ) async {
     try {
       final appointments = await remoteDataSource.getAppointments(userId);
       final now = DateTime.now();
-      
+
       final upcoming = appointments.where((appointment) {
         return appointment.appointmentDate.isAfter(now);
       }).toList();
-      
+
       return Right(upcoming);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

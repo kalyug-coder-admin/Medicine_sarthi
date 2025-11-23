@@ -1,3 +1,5 @@
+// lib/data/datasources/remote/auth_remote_datasource.dart
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -45,9 +47,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw ServerException('Sign in failed');
       }
 
-      return await _getUserData(credential.user!.uid);
+      final uid = credential.user!.uid;
+      return await _getOrCreateUser(uid, email: email);
     } on FirebaseAuthException catch (e) {
       throw ServerException(e.message ?? 'Authentication failed');
+    } catch (e) {
+      throw ServerException('Sign in failed: $e');
     }
   }
 
@@ -84,7 +89,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       await firestore.collection('users').doc(user.id).set(user.toJson());
 
-      // If family member, link to elderly user
       if (role == UserRole.family && linkedElderlyId != null) {
         await linkFamilyMember(linkedElderlyId, user.id);
       }
@@ -98,52 +102,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) throw ServerException('Google sign in cancelled');
 
-      if (googleUser == null) {
-        throw ServerException('Google sign in cancelled');
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
-
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final userCredential =
-      await firebaseAuth.signInWithCredential(credential);
+      final userCredential = await firebaseAuth.signInWithCredential(credential);
+      if (userCredential.user == null) throw ServerException('Google sign in failed');
 
-      if (userCredential.user == null) {
-        throw ServerException('Google sign in failed');
-      }
-
-      // Check if user exists
-      final userDoc = await firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-
-      if (userDoc.exists) {
-        return UserModel.fromJson(userDoc.data()!);
-      }
-
-      // Create new user
-      final user = UserModel(
-        id: userCredential.user!.uid,
+      return await _getOrCreateUser(
+        userCredential.user!.uid,
         email: userCredential.user!.email!,
-        name: userCredential.user!.displayName ?? 'User',
-        age: 0,
-        gender: '',
-        role: UserRole.elderly,
-        profileImageUrl: userCredential.user!.photoURL,
-        createdAt: DateTime.now(),
+        name: userCredential.user!.displayName,
+        photoUrl: userCredential.user!.photoURL,
       );
-
-      await firestore.collection('users').doc(user.id).set(user.toJson());
-
-      return user;
     } catch (e) {
       throw ServerException('Google sign in failed: $e');
     }
@@ -163,30 +139,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> getCurrentUser() async {
-    try {
-      final currentUser = firebaseAuth.currentUser;
-
-      if (currentUser == null) {
-        throw ServerException('No user logged in');
-      }
-
-      return await _getUserData(currentUser.uid);
-    } catch (e) {
-      throw ServerException('Failed to get current user');
-    }
+    final currentUser = firebaseAuth.currentUser;
+    if (currentUser == null) throw ServerException('No user logged in');
+    return await _getOrCreateUser(currentUser.uid, email: currentUser.email);
   }
 
   @override
   Future<String> generateFamilyLinkCode(String userId) async {
     try {
       final code = DateTime.now().millisecondsSinceEpoch.toString();
-
       await firestore.collection('link_codes').doc(code).set({
         'elderlyUserId': userId,
         'createdAt': FieldValue.serverTimestamp(),
-        'expiresAt': DateTime.now().add(const Duration(hours: 24)),
+        'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))),
       });
-
       return code;
     } catch (e) {
       throw ServerException('Failed to generate link code');
@@ -194,30 +160,68 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> linkFamilyMember(
-      String elderlyUserId,
-      String familyUserId,
-      ) async {
+  Future<void> linkFamilyMember(String elderlyUserId, String familyUserId) async {
     try {
-      await firestore.collection('users').doc(elderlyUserId).update({
-        'linkedFamilyIds': FieldValue.arrayUnion([familyUserId]),
+      final batch = firestore.batch();
+
+      final elderlyRef = firestore.collection('users').doc(elderlyUserId);
+      batch.update(elderlyRef, {
+        'linkedFamilyIds': FieldValue.arrayUnion([familyUserId])
       });
 
-      await firestore.collection('users').doc(familyUserId).update({
-        'linkedElderlyId': elderlyUserId,
-      });
+      final familyRef = firestore.collection('users').doc(familyUserId);
+      batch.update(familyRef, {'linkedElderlyId': elderlyUserId});
+
+      await batch.commit();
     } catch (e) {
       throw ServerException('Failed to link family member');
     }
   }
 
-  Future<UserModel> _getUserData(String userId) async {
-    final doc = await firestore.collection('users').doc(userId).get();
+  // ─────────────────────────────────────────────────────────────────────
+  // Helper: Get user or create default if missing
+  // ─────────────────────────────────────────────────────────────────────
+  Future<UserModel> _getOrCreateUser(
+      String uid, {
+        String? email,
+        String? name,
+        String? photoUrl,
+      }) async {
+    final docRef = firestore.collection('users').doc(uid);
+    final doc = await docRef.get();
 
-    if (!doc.exists) {
-      throw ServerException('User data not found');
+    if (doc.exists) {
+      return UserModel.fromJson(doc.data()!);
     }
 
-    return UserModel.fromJson(doc.data()!);
+    // Create default user
+    final defaultUser = UserModel(
+      id: uid,
+      email: email ?? '$uid@unknown.com',
+      name: name ?? 'User',
+      age: 0,
+      gender: 'Other',
+      bloodGroup: null,
+      role: UserRole.elderly,
+      linkedFamilyIds: null,
+      linkedElderlyId: null,
+      emergencyContact: null,
+      profileImageUrl: photoUrl,
+      createdAt: DateTime.now(),
+    );
+
+    try {
+      await docRef.set(defaultUser.toJson());
+    } catch (e) {
+      print('Failed to create default user: $e'); // Debug
+      throw ServerException('Permission denied: Could not create profile');
+    }
+
+    final newDoc = await docRef.get();
+    if (!newDoc.exists) {
+      throw ServerException('Failed to create user profile');
+    }
+
+    return UserModel.fromJson(newDoc.data()!);
   }
 }

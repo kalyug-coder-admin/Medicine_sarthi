@@ -15,12 +15,17 @@ import org.gradle.api.JavaVersion
 
             defaultConfig {
                 applicationId = "com.example.medi_kit"
-                minSdk = (project.findProperty("flutter.minSdkVersion")?.toString()?.toInt() ?: 24) // Bumped fallback to 24 (Flutter/plugin min)
-                targetSdk = 36 // Meets/exceeds Google Play req (35+) as of Aug 2025
+                minSdk = (project.findProperty("flutter.minSdkVersion")?.toString()?.toInt() ?: 24)
+                targetSdk = 36
                 versionCode = (project.findProperty("flutter.versionCode")?.toString()?.toInt() ?: 1)
                 versionName = project.findProperty("flutter.versionName")?.toString() ?: "1.0.0"
                 multiDexEnabled = true
+
+                // Enable exact alarms (MIUI + Android 13)
+                manifestPlaceholders["androidAppUseExactAlarm"] = true
             }
+
+
 
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_11

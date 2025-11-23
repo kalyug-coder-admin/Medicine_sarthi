@@ -4,47 +4,48 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.light,
+    );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-      ),
+      colorScheme: colorScheme,
       textTheme: GoogleFonts.poppinsTextTheme().copyWith(
         // Large text for elderly users
         displayLarge: GoogleFonts.poppins(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
         displayMedium: GoogleFonts.poppins(
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontSize: 24,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
         titleLarge: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 18,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: GoogleFonts.poppins(
           fontSize: 16,
-          color: AppColors.textSecondary,
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -56,7 +57,8 @@ class AppTheme {
           elevation: 2,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
+        color: colorScheme.surface,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -65,7 +67,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -76,58 +78,65 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.poppins(
           fontSize: 16,
-          color: Colors.grey[400],
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colorScheme.onPrimary,
         ),
       ),
     );
   }
 
   static ThemeData get darkTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
-      ),
+      colorScheme: colorScheme,
       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
         displayLarge: GoogleFonts.poppins(
           fontSize: 32,
           fontWeight: FontWeight.bold,
+          color: colorScheme.onSurface,
         ),
         displayMedium: GoogleFonts.poppins(
           fontSize: 28,
           fontWeight: FontWeight.bold,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontSize: 24,
           fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
         ),
         titleLarge: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 18,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: GoogleFonts.poppins(
           fontSize: 16,
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -139,7 +148,8 @@ class AppTheme {
           elevation: 2,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
+        color: colorScheme.surface,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -148,7 +158,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[800],
+        fillColor: colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -159,18 +169,18 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.poppins(
           fontSize: 16,
-          color: Colors.grey[400],
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colorScheme.onPrimary,
         ),
       ),
     );

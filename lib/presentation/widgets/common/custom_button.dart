@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+// lib/presentation/widgets/common/custom_button.dart
 
-class CustomButton extends StatelessWidget {
+import 'package:flutter/material.dart';
+import '../../../config/theme/neumorphic_style.dart';
+
+class CustomButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
-  final Color? backgroundColor;
-  final Color? textColor;
   final IconData? icon;
 
   const CustomButton({
@@ -14,53 +14,57 @@ class CustomButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.isLoading = false,
-    this.backgroundColor,
-    this.textColor,
     this.icon,
   });
 
   @override
+  State<CustomButton> createState() => _CustomButtonState();
+}
+
+class _CustomButtonState extends State<CustomButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.primary,
-        foregroundColor: textColor ?? Colors.white,
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 2,
-      ),
-      child: isLoading
-          ? const SizedBox(
-        height: 24,
-        width: 24,
-        child: CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 2,
-        ),
-      )
-          : icon != null
-          ? Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 24),
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        if (!widget.isLoading) widget.onPressed?.call();
+      },
+
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        height: 56,
+        alignment: Alignment.center,
+        decoration: Neu.box(radius: 18, isPressed: _isPressed),
+
+        child: widget.isLoading
+            ? const SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(
+            color: Colors.black,
+            strokeWidth: 2.5,
           ),
-        ],
-      )
-          : Text(
-        text,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (widget.icon != null) ...[
+              Icon(widget.icon, size: 22, color: Colors.black87),
+              const SizedBox(width: 10),
+            ],
+            Text(
+              widget.text,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+          ],
         ),
       ),
     );
